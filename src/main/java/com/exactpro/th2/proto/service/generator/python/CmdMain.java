@@ -15,17 +15,10 @@ package com.exactpro.th2.proto.service.generator.python;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 
-import org.antlr.v4.runtime.ANTLRFileStream;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -35,11 +28,6 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactpro.th2.proto.service.generator.core.antlr.Protobuf3Lexer;
-import com.exactpro.th2.proto.service.generator.core.antlr.Protobuf3Parser;
-import com.exactpro.th2.proto.service.generator.core.antlr.Protobuf3Parser.ProtoContext;
-import com.exactpro.th2.proto.service.generator.python.service.MethodDescription;
-import com.exactpro.th2.proto.service.generator.python.service.ServiceDescription;
 import com.exactpro.th2.proto.service.generator.python.service.ServiceWriter;
 
 public class CmdMain {
@@ -61,6 +49,7 @@ public class CmdMain {
             String outputPathString = cmd.getOptionValue("out");
             Path outputPath = Path.of(outputPathString);
             File outputFolder = Path.of(outputPathString).toFile();
+
             if (!outputFolder.exists() && !outputFolder.mkdirs()) {
                 logger.error("Can not create output folder by path: " + outputPathString);
                 return;
@@ -72,61 +61,18 @@ public class CmdMain {
             }
 
             Path protoFileOrFolder = Path.of(cmd.getOptionValue("proto"));
-            File[] files = loadFiles(protoFileOrFolder, cmd.hasOption("recursive"));
 
             String writerClassName = cmd.getOptionValue("writer");
             ServiceWriter writer = loadServiceWriter(writerClassName);
+
             if (writer == null) {
                 logger.error("Can not find service writer." + (writerClassName != null ? "Writer class: " + writerClassName :""));
                 return;
             }
 
-            for (File protoFile : files) {
-                try {
-                    Protobuf3Lexer lexer = new Protobuf3Lexer(new ANTLRFileStream(protoFile.toPath().toString()));
-                    Protobuf3Parser parser = new Protobuf3Parser(new CommonTokenStream(lexer));
-                    parser.removeErrorListeners();
-                    ProtoContext protoTree = parser.proto();
+            var loader = new ServiceGenerator(protoFileOrFolder.toFile(), cmd.hasOption("recursive"));
+            loader.generate(outputPath, writer);
 
-                    ServiceDescription[] serviceDescriptions = getServices(protoTree);
-
-                    if (serviceDescriptions.length < 1) {
-                        logger.warn("Can not find services in file by path: {}", protoFile.toPath());
-                    }
-
-                    Path pathToFile = protoFileOrFolder.relativize(protoFile.toPath());
-                    File outputFile;
-
-                    String protoFileName = protoFile.toPath().getFileName().toString();
-                    int extensionIndex = protoFileName.lastIndexOf(".");
-                    if (extensionIndex > -1) {
-                        protoFileName = protoFileName.substring(0, extensionIndex);
-                    }
-
-                    String outputFileName = writer.getFileName(protoFileName);
-
-                    Path parent = pathToFile.getParent();
-                    outputFile = (parent == null ? outputPath.resolve(outputFileName) : outputPath.resolve(parent).resolve(outputFileName)).toFile();
-
-                    if (!outputFile.exists()
-                    && (outputFile.toPath().getParent() != null && !outputFile.toPath().getParent().toFile().exists() && !outputFile.toPath().getParent().toFile().mkdirs()
-                    || !outputFile.createNewFile())) {
-                        logger.error("Can not create output file for file '{}'. Output path: '{}'", protoFile.toPath(), outputFile.toPath());
-                        continue;
-                    }
-
-                    try (FileOutputStream output = new FileOutputStream(outputFile)) {
-                        for (ServiceDescription serviceDescription : serviceDescriptions) {
-                            writer.write(serviceDescription, protoFileName, outputFileName, output);
-                        }
-                    } catch (Exception e) {
-                        logger.error("Can not write service description to file by path '{}'", outputFile.toPath(), e);
-                    }
-
-                } catch (IOException e) {
-                    logger.error("Can not parsed proto file by path:" + protoFile.toPath().toString(), e);
-                }
-            }
         } catch (ParseException e) {
             logger.error("Can not parse arguments", e);
             printHelp(options);
@@ -137,35 +83,6 @@ public class CmdMain {
 
     }
 
-    private static File[] loadFiles(Path fileOrFolder, boolean recursive) throws FileNotFoundException {
-        File protoFileOrFolder = fileOrFolder.toFile();
-        if (!protoFileOrFolder.exists()) {
-            throw new FileNotFoundException("Can not find file or folder by path: " + fileOrFolder);
-        }
-
-        if (protoFileOrFolder.isFile()) {
-            return new File[]{protoFileOrFolder};
-        } else if (protoFileOrFolder.isDirectory()) {
-            return loadFiles(protoFileOrFolder, recursive).toArray(new File[0]);
-        } else {
-            throw new RuntimeException("Can not get access to file or folder by path: " + fileOrFolder);
-        }
-    }
-
-    private static List<File> loadFiles(File folder, boolean recursive) {
-        List<File> list = new ArrayList<>();
-        for (File file : folder.listFiles()) {
-            if (file.isFile()) {
-                list.add(file);
-            }
-
-            if (file.isDirectory() && recursive) {
-                list.addAll(loadFiles(file, recursive));
-            }
-        }
-
-        return list;
-    }
 
     private static ServiceWriter loadServiceWriter(String writerClassName) {
         var loadedClasses = ServiceLoader.load(ServiceWriter.class).stream();
@@ -180,82 +97,6 @@ public class CmdMain {
         }
     }
 
-    private static ServiceDescription[] getServices(ProtoContext protoTree) {
-        List<ServiceDescription> descriptions = new ArrayList<>();
-        for (ParseTree child : protoTree.children) {
-            if (child.getChildCount() > 0) {
-
-                var potentialEntity = child.getChild(0);
-
-                if (potentialEntity.getChildCount() > 0) {
-
-                    var option = potentialEntity.getChild(0).getText();
-
-                    if (option.equals("service")) {
-                        var entityName = potentialEntity.getChild(1).getText();
-                        ServiceDescription serviceDescription = new ServiceDescription(entityName);
-                        serviceDescription.getMethods().addAll(getMethodDescriptors(potentialEntity));
-                        descriptions.add(serviceDescription);
-                    }
-                }
-            }
-        }
-
-        return descriptions.toArray(new ServiceDescription[0]);
-    }
-
-    private static List<MethodDescription> getMethodDescriptors(ParseTree serviceNode) {
-
-        var startRpcDeclarationIndex = 3;
-
-        var methodNameIndex = 1;
-        var methodRequestTypeIndex = 3;
-        var methodResponseTypeIndex = 7;
-
-        List<String> comments = new ArrayList<>();
-        List<MethodDescription> methodDescriptors = new ArrayList<>();
-
-        for (int i = startRpcDeclarationIndex; i < serviceNode.getChildCount(); i++) {
-            var methodNode = serviceNode.getChild(i);
-
-            if (isChildless(methodNode)) {
-                if (isComment(methodNode)) {
-                    comments.add(extractCommentText(methodNode));
-                }
-                continue;
-            }
-
-
-            var methodName = methodNode.getChild(methodNameIndex).getText();
-            var methodRequestType = methodNode.getChild(methodRequestTypeIndex).getText();
-            var methodResponseType = methodNode.getChild(methodResponseTypeIndex).getText();
-
-            methodDescriptors.add(new MethodDescription(methodName, methodResponseType, methodRequestType));
-
-            comments.clear();
-        }
-
-        return methodDescriptors;
-    }
-
-    private static boolean isChildless(ParseTree node) {
-        return node.getChildCount() == 0;
-    }
-
-    private static boolean isComment(ParseTree node) {
-        var stringNode = node.toString().strip();
-        return stringNode.startsWith("/**") && stringNode.endsWith("*/")
-                || stringNode.startsWith("/*") && stringNode.endsWith("*/")
-                || stringNode.startsWith("//");
-    }
-
-    private static String extractCommentText(ParseTree commentNode) {
-        return commentNode.toString().replace("/**", "")
-                .replace("/*", "")
-                .replace("*/", "")
-                .replace("//", "")
-                .strip();
-    }
 
     private static void printHelp(Options options) {
         new HelpFormatter().printHelp("python-service-generator", options);

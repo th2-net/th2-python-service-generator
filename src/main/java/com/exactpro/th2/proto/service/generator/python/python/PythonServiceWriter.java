@@ -24,6 +24,7 @@ import com.exactpro.th2.proto.service.generator.python.service.ServiceWriter;
 public class PythonServiceWriter implements ServiceWriter {
 
     private static final String TAB = "    ";
+
     @Override
     public void write(ServiceDescription description, String protoFile, String outFile, OutputStream stream) {
         protoFile = protoFile.replace('-', '_');
