@@ -33,11 +33,11 @@ public class PythonServiceWriter implements ServiceWriter {
             writer.println("class " + description.getName() + "Service(object):");
             writer.println();
             writer.println(TAB + "def __init__(self, router):");
-            writer.println(TAB + TAB + "self.connector = router.__get__connection(" + description.getName() + "Service, importStub." + description.getName() + "Stub)");
+            writer.println(TAB + TAB + "self.connector = router.get_connection(" + description.getName() + "Service, importStub." + description.getName() + "Stub)");
             for (MethodDescription method : description.getMethods()) {
                 writer.println();
                 writer.println(TAB + "def " + method.getName() + "(self, request):");
-                writer.println(TAB + TAB + "self.connector.createRequest(\"" + method.getName() + "\",request)");
+                writer.println(TAB + TAB + "return self.connector.createRequest(\"" + method.getName() + "\",request)");
             }
         }
     }
