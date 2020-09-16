@@ -42,8 +42,6 @@ pipeline {
                     rootDir: "./",
                     buildFile: 'build.gradle',
                     tasks: "clean build ${GRADLE_SWITCHES}",
-                    deployerId: "GRADLE_DEPLOYER",
-                    resolverId: "GRADLE_RESOLVER",
                 )
             }
         }
