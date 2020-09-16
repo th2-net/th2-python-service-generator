@@ -11,15 +11,15 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python.python;
+package com.exactpro.th2.proto.service.generator.python;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 
-import com.exactpro.th2.proto.service.generator.python.service.MethodDescription;
-import com.exactpro.th2.proto.service.generator.python.service.ServiceDescription;
-import com.exactpro.th2.proto.service.generator.python.service.ServiceWriter;
+import com.exactpro.th2.proto.service.generator.service.MethodDescription;
+import com.exactpro.th2.proto.service.generator.service.ServiceDescription;
+import com.exactpro.th2.proto.service.generator.service.ServiceWriter;
 
 public class PythonServiceWriter implements ServiceWriter {
 

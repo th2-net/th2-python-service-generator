@@ -11,22 +11,14 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python.service;
+package com.exactpro.th2.proto.service.generator.service;
 
-import lombok.Getter;
+import java.io.OutputStream;
 
-@Getter
-public class MethodDescription {
+public interface ServiceWriter {
 
-    public MethodDescription(String name, String returnType, String argumentType) {
-        this.name = name;
-        this.returnType = returnType;
-        this.argumentType = argumentType;
-    }
+    void write(ServiceDescription description, String protoFileName, String outFileName, OutputStream stream);
 
-    private String name;
+    String getFileName(String protoFileName);
 
-    private String returnType;
-
-    private String argumentType;
 }

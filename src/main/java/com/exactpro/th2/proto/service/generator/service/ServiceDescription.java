@@ -11,14 +11,22 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python.service;
+package com.exactpro.th2.proto.service.generator.service;
 
-import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
-public interface ServiceWriter {
+import lombok.Getter;
 
-    void write(ServiceDescription description, String protoFileName, String outFileName, OutputStream stream);
+@Getter
+public class ServiceDescription {
 
-    String getFileName(String protoFileName);
+    public ServiceDescription(String name) {
+        this.name = name;
+    }
+
+    private String name;
+
+    private List<MethodDescription> methods = new ArrayList<>();
 
 }

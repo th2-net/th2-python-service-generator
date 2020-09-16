@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python;
+package com.exactpro.th2.proto.service.generator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -28,7 +28,7 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.exactpro.th2.proto.service.generator.python.service.ServiceWriter;
+import com.exactpro.th2.proto.service.generator.service.ServiceWriter;
 
 public class CmdMain {
 
@@ -42,9 +42,15 @@ public class CmdMain {
         options.addOption(Option.builder("r").longOpt("recursive").hasArg(false).desc("Recursive file search in proto folder").build());
         options.addOption(Option.builder("o").longOpt("out").hasArg().desc("Output folder").required().build());
         options.addOption(Option.builder("w").longOpt("writer").hasArg().desc("Short class name of service writer").build());
+        options.addOption(Option.builder("h").longOpt("help").hasArg(false).desc("Print help message").build());
 
         try {
             CommandLine cmd = new DefaultParser().parse(options, args);
+
+            if (cmd.hasOption("h")) {
+                printHelp(options);
+                return;
+            }
 
             String outputPathString = cmd.getOptionValue("out");
             Path outputPath = Path.of(outputPathString);

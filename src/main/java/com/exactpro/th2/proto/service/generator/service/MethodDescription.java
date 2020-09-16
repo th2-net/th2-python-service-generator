@@ -11,22 +11,22 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python.service;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.exactpro.th2.proto.service.generator.service;
 
 import lombok.Getter;
 
 @Getter
-public class ServiceDescription {
+public class MethodDescription {
 
-    public ServiceDescription(String name) {
+    public MethodDescription(String name, String returnType, String argumentType) {
         this.name = name;
+        this.returnType = returnType;
+        this.argumentType = argumentType;
     }
 
     private String name;
 
-    private List<MethodDescription> methods = new ArrayList<>();
+    private String returnType;
 
+    private String argumentType;
 }

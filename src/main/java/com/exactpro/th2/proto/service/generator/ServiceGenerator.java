@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python;
+package com.exactpro.th2.proto.service.generator;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 import com.exactpro.th2.proto.service.generator.core.antlr.Protobuf3Lexer;
 import com.exactpro.th2.proto.service.generator.core.antlr.Protobuf3Parser;
 import com.exactpro.th2.proto.service.generator.core.antlr.Protobuf3Parser.ProtoContext;
-import com.exactpro.th2.proto.service.generator.python.service.MethodDescription;
-import com.exactpro.th2.proto.service.generator.python.service.ServiceDescription;
-import com.exactpro.th2.proto.service.generator.python.service.ServiceWriter;
+import com.exactpro.th2.proto.service.generator.service.MethodDescription;
+import com.exactpro.th2.proto.service.generator.service.ServiceDescription;
+import com.exactpro.th2.proto.service.generator.service.ServiceWriter;
 
 public class ServiceGenerator {
 

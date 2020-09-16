@@ -12,16 +12,20 @@
  */
 
 plugins {
-    id 'java-gradle-plugin'
+    id 'com.palantir.docker' version '0.25.0'
+    id 'java'
+    id 'application'
     id 'antlr'
 }
 
 ext {
     grpcVersion         = '1.29.0'
+
+    dockerImageVersion      = "${version_major}.${version_minor}.${version_maintenance}.${version_build}"
 }
 
-group 'com.exactpro.th2'
-version '1.0-SNAPSHOT'
+group "com.exactpro.th2"
+version "${version_major}.${version_minor}.${version_maintenance}"
 
 sourceCompatibility = 1.11
 
@@ -60,7 +64,28 @@ jar {
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-                'Main-Class': 'com.exactpro.th2.proto.service.generator.python.CmdMain'
+                'Main-Class': 'com.exactpro.th2.proto.service.generator.CmdMain'
         )
     }
+}
+
+archivesBaseName = 'th2-python-service-generator'
+
+application {
+    mainClassName 'com.exactpro.th2.proto.service.generator.CmdMain'
+}
+
+distTar {
+    archiveName "${archivesBaseName}.tar"
+}
+
+dockerPrepare {
+    dependsOn distTar
+}
+
+docker {
+    name "${target_docker_repository}".isEmpty() ? "${docker_image_name}:${dockerImageVersion}" : "${target_docker_repository}/${docker_image_name}:${dockerImageVersion}"
+    tag 'local-version', "${docker_image_name}:${dockerImageVersion}"
+
+    copySpec.from(tarTree("$buildDir/distributions/${archivesBaseName}.tar"))
 }
