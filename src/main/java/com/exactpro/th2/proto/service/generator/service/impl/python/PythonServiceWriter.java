@@ -11,7 +11,7 @@
  * limitations under the License.
  */
 
-package com.exactpro.th2.proto.service.generator.python;
+package com.exactpro.th2.proto.service.generator.service.impl.python;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;

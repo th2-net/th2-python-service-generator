@@ -47,7 +47,7 @@ public class CmdMain {
         try {
             CommandLine cmd = new DefaultParser().parse(options, args);
 
-            if (cmd.hasOption("h")) {
+            if (cmd.hasOption("help")) {
                 printHelp(options);
                 return;
             }
@@ -57,12 +57,12 @@ public class CmdMain {
             File outputFolder = Path.of(outputPathString).toFile();
 
             if (!outputFolder.exists() && !outputFolder.mkdirs()) {
-                logger.error("Can not create output folder by path: " + outputPathString);
+                logger.error("Can not create output folder by path = {}", outputPathString);
                 return;
             }
 
             if (outputFolder.isFile()) {
-                logger.error("Output path is file. Output path: " + outputPathString);
+                logger.error("Output path is file. Output path = {}", outputPathString);
                 return;
             }
 
@@ -72,12 +72,14 @@ public class CmdMain {
             ServiceWriter writer = loadServiceWriter(writerClassName);
 
             if (writer == null) {
-                logger.error("Can not find service writer." + (writerClassName != null ? "Writer class: " + writerClassName :""));
+                logger.error("Can not find service writer. {}", (writerClassName != null ? "Writer class: " + writerClassName :"Without arguments."));
                 return;
+            } else {
+                logger.debug("Using a writer class = {}", writer.getClass());
             }
 
-            var loader = new ServiceGenerator(protoFileOrFolder.toFile(), cmd.hasOption("recursive"));
-            loader.generate(outputPath, writer);
+            var generator = new ServiceGenerator(protoFileOrFolder.toFile(), cmd.hasOption("recursive"));
+            generator.generate(outputPath, writer);
 
         } catch (ParseException e) {
             logger.error("Can not parse arguments", e);
@@ -105,7 +107,7 @@ public class CmdMain {
 
 
     private static void printHelp(Options options) {
-        new HelpFormatter().printHelp("python-service-generator", options);
+        new HelpFormatter().printHelp("th2-python-service-generator", options);
     }
 
 }

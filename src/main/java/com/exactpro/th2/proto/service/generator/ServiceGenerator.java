@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.antlr.v4.runtime.ANTLRFileStream;
+import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.slf4j.Logger;
@@ -64,10 +64,13 @@ public class ServiceGenerator {
     public void generate(Path outputFolder, ServiceWriter writer) {
         var files = loadInputFiles();
 
+        if (files.isEmpty()) {
+            logger.warn("Can not find proto files");
+        }
+
         Path protoFileOrFolderPath = protoFileOrFolder.toPath();
 
         for (File file : files) {
-
             Path filePath = file.toPath();
 
             try {
@@ -107,6 +110,7 @@ public class ServiceGenerator {
                     for (ServiceDescription serviceDescription : serviceDescriptions) {
                         writer.write(serviceDescription, protoFileName, outputFileName, output);
                     }
+                    logger.info("Generate service file by path = " + outputFile.getAbsolutePath());
                 } catch (Exception e) {
                     logger.error("Can not write service description to file by path '{}'", outputFile.toPath(), e);
                 }
@@ -120,8 +124,10 @@ public class ServiceGenerator {
 
     private List<File> loadInputFiles() {
         if (protoFileOrFolder.isFile()) {
+            logger.debug("Loaded single file. Path = {}", protoFileOrFolder.getAbsolutePath());
             return Collections.singletonList(protoFileOrFolder);
         } else if (protoFileOrFolder.isDirectory()) {
+            logger.debug("Loaded directory. Path = {}", protoFileOrFolder.getAbsolutePath());
             return loadFilesRecursive(protoFileOrFolder, recursive);
         } else {
             throw new RuntimeException("Can not get access to file or folder by path: " + protoFileOrFolder.toPath());
@@ -133,6 +139,7 @@ public class ServiceGenerator {
         for (File file : folder.listFiles()) {
             if (file.isFile()) {
                 list.add(file);
+                logger.info("Find proto file by path = " + file.getAbsolutePath());
             }
 
             if (file.isDirectory() && recursive) {
@@ -188,7 +195,7 @@ public class ServiceGenerator {
     }
 
     private ProtoContext parseProtoFromInputFile(File inputFile) throws IOException {
-        Protobuf3Lexer lexer = new Protobuf3Lexer(new ANTLRFileStream(inputFile.toString()));
+        Protobuf3Lexer lexer = new Protobuf3Lexer(CharStreams.fromFileName((inputFile.toString())));
         Protobuf3Parser parser = new Protobuf3Parser(new CommonTokenStream(lexer));
         parser.removeErrorListeners();
         return parser.proto();
