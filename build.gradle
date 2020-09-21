@@ -21,8 +21,6 @@ plugins {
 ext {
     grpcVersion         = '1.29.0'
     version_slf4j       = '1.7.30'
-    
-    dockerImageVersion      = release_version
 }
 
 group "com.exactpro.th2"
