@@ -21,14 +21,12 @@ plugins {
 ext {
     grpcVersion         = '1.29.0'
     version_slf4j       = '1.7.30'
-    
-    dockerImageVersion      = "${version_major}.${version_minor}.${version_maintenance}.${version_build}"
 }
 
 group "com.exactpro.th2"
-version "${version_major}.${version_minor}.${version_maintenance}"
+version release_version
 
-sourceCompatibility = 1.11
+sourceCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -66,7 +64,14 @@ jar {
     manifest {
         attributes(
                 'Class-Path': configurations.compile.collect { it.getName() }.join(' '),
-                'Main-Class': 'com.exactpro.th2.proto.service.generator.CmdMain'
+                'Main-Class': 'com.exactpro.th2.proto.service.generator.CmdMain',
+                'Created-By':               "${System.getProperty('java.version')} (${System.getProperty('java.vendor')})",
+                'Specification-Title':      '',
+                'Specification-Vendor':     'Exactpro Systems LLC',
+                'Implementation-Title':     project.archivesBaseName,
+                'Implementation-Vendor':    'Exactpro Systems LLC',
+                'Implementation-Vendor-Id': 'com.exactpro',
+                'Implementation-Version':   project.version
         )
     }
 }
@@ -77,8 +82,10 @@ application {
     mainClassName 'com.exactpro.th2.proto.service.generator.CmdMain'
 }
 
+applicationName = 'service'
+
 distTar {
-    archiveName "${archivesBaseName}.tar"
+    archiveName "${applicationName}.tar"
 }
 
 dockerPrepare {
@@ -86,8 +93,5 @@ dockerPrepare {
 }
 
 docker {
-    name "${target_docker_repository}".isEmpty() ? "${docker_image_name}:${dockerImageVersion}" : "${target_docker_repository}/${docker_image_name}:${dockerImageVersion}"
-    tag 'local-version', "${docker_image_name}:${dockerImageVersion}"
-
-    copySpec.from(tarTree("$buildDir/distributions/${archivesBaseName}.tar"))
+    copySpec.from(tarTree("$buildDir/distributions/${applicationName}.tar"))
 }
