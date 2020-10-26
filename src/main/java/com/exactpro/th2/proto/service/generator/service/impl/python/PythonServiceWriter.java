@@ -37,7 +37,7 @@ public class PythonServiceWriter implements ServiceWriter {
             writer.println(TAB + TAB + "self.connector = router.get_connection(" + description.getName() + "Service, importStub." + description.getName() + "Stub)");
             for (MethodDescription method : description.getMethods()) {
                 writer.println();
-                writer.println(TAB + "def " + method.getName() + "(self, request):");
+                writer.println(TAB + "def " + method.getName() + "(self, request, timeout=None):");
                 writer.println(TAB + TAB + "return self.connector.create_request(\'" + method.getName() + "\', request, timeout)");
             }
         }

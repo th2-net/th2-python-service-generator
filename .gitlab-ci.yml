@@ -2,7 +2,7 @@ variables:
   APP_NAME: "th2-python-service-generator"
   MAJOR_VERSION: "1"
   MINOR_VERSION: "1"
-  MAINTENANCE_VERSION: '0'
+  MAINTENANCE_VERSION: '1'
 
 include:
   - project: 'vivarium/th2/pipelines'
