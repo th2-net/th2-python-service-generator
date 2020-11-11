@@ -1,10 +1,7 @@
 variables:
   APP_NAME: "th2-python-service-generator"
-  MAJOR_VERSION: "1"
-  MINOR_VERSION: "1"
-  MAINTENANCE_VERSION: '1'
 
 include:
-  - project: 'vivarium/th2/pipelines'
+  - project: "vivarium/th2/pipelines"
     ref: master
-    file: '/.gitlab-ci-java.yml'
+    file: "/.gitlab-ci-java.yml"
